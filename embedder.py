@@ -208,7 +208,7 @@ class Encoder(nn.Module):
         # self.stacked_en = nn.ModuleList(
         #     [nn.Linear(layer_config[i - 1], layer_config[i]) for i in range(1, len(layer_config))])
         self.stacked_bns = nn.ModuleList([nn.BatchNorm1d(layer_config[i], momentum=0.01) for i in range(1, len(layer_config))])
-        self.stacked_prelus = nn.ModuleList([nn.Softplus() for _ in range(1, len(layer_config))])
+        self.stacked_prelus = nn.ModuleList([nn.ReLU() for _ in range(1, len(layer_config))])
 
     def forward(self, x, edge_index, edge_weight=None):
         for i, gnn in enumerate(self.stacked_gnn):
