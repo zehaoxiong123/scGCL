@@ -1,4 +1,4 @@
-# scGCL
+# scGCL: an imputation method for scRNA-seq data based on Graph Contrastive Learning
 
 ![image](https://github.com/zehaoxiong123/scGCL/blob/main/scGCL.png)
 
