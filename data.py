@@ -32,10 +32,9 @@ def download_pyg_data(config):
             size_factor = dataset.size_factors
         else :
             dataset = DatasetClass(**config["kwargs"])
-            size_factor = dataset.size_factors
         utils.create_masks(data=dataset.data)
         torch.save((dataset.data, dataset.slices), dst_path)
-    return config["kwargs"]["root"], config["name"], data_dir,size_factor
+    return config["kwargs"]["root"], config["name"], data_dir
 
 
 def download_data(root, dataset):
@@ -58,7 +57,7 @@ class Dataset(InMemoryDataset):
     """
 
     def __init__(self, root="data", dataset='Adam', transform=None, pre_transform=None):
-        self.root, self.dataset, self.data_dir,self.size_factors = download_data(root=root, dataset=dataset)
+        self.root, self.dataset, self.data_dir = download_data(root=root, dataset=dataset)
         utils.create_dirs(self.dirs)
         super().__init__(root=self.data_dir, transform=transform, pre_transform=pre_transform)
         path = osp.join(self.data_dir, "processed", self.processed_file_names[0])

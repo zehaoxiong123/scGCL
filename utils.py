@@ -39,7 +39,7 @@ def to_sparse(x):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--embedder", type=str, default="AFGRL")
-    parser.add_argument("--dataset", type=str, default="tosches_turtle", help="Name of the dataset. Supported names are: wikics, cs, computers, photo, and physics")
+    parser.add_argument("--dataset", type=str, default="Quake_Smart-seq2_Lung", help="Name of the dataset. Supported names are: wikics, cs, computers, photo, and physics")
 
     parser.add_argument('--checkpoint_dir', type=str, default = './model_checkpoints', help='directory to save checkpoint')
     parser.add_argument("--root", type=str, default="data")
@@ -127,6 +127,12 @@ def decide_config(root, dataset):
         filepath = "./test_csv/" + dataset + "/data.h5"
         params = {"kwargs": {"root": root, "name": dataset, "filepath": filepath},
                   "name": dataset, "class": Singlecell, "src": "pyg"}
+    elif dataset == "macosko":
+        dataset = "Macosko"
+        root = osp.join(root, "pyg")
+        filepath = "./test_csv/" + dataset + "/data.h5"
+        params = {"kwargs": {"root": root, "name": dataset, "filepath": filepath},
+                  "name": dataset, "class": Singlecell, "src": "pyg"}
     elif dataset == "wang_lung":
         dataset = "Wang_lung"
         root = osp.join(root, "pyg")
@@ -189,6 +195,12 @@ def decide_config(root, dataset):
                   "name": dataset, "class": Singlecell, "src": "pyg"}
     elif dataset == "young":
         dataset = "Young"
+        root = osp.join(root, "pyg")
+        filepath = "./test_csv/" + dataset + "/data.h5"
+        params = {"kwargs": {"root": root, "name": dataset, "filepath": filepath},
+                  "name": dataset, "class": Singlecell, "src": "pyg"}
+    elif dataset == "chen":
+        dataset = "Chen"
         root = osp.join(root, "pyg")
         filepath = "./test_csv/" + dataset + "/data.h5"
         params = {"kwargs": {"root": root, "name": dataset, "filepath": filepath},

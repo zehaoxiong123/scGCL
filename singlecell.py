@@ -43,9 +43,7 @@ class Singlecell(InMemoryDataset):
         raw = True
         # data, data_label,size_factor = data_Preprocess.nomalize_for_COVID(self.filepath,self.labelpath,2048);
         #data, data_label, size_factor,gene = data_Preprocess.nomalize_for_Zeisel(self.filepath, self.labelpath, 2048,0);
-        data, data_label, size_factor = data_Preprocess.nomalize_for_AF(self.filepath, 2048,raw);
-        self.size_factors = size_factor
-        print(self.size_factors)
+        data, data_label = data_Preprocess.nomalize_for_AF(self.filepath, 2048,raw);
         x = torch.tensor(np.array(data),dtype=torch.float32)
         y = torch.tensor(data_label, dtype=torch.long)
         #edge_index =  np.corrcoef(data)
