@@ -121,10 +121,10 @@ def nomalize_for_AF(filename,gene_num,raw, sparsify = False, skip_exprs = False)
         adata.obs['Group'] = cell_label
         adata = normalize(adata, copy=True, highly_genes=gene_num, size_factors=True, normalize_input=raw, logtrans_input=True)
         count = adata.X
-        if raw == False:
-            a = pd.DataFrame(count).T
-            a.to_csv("./results/raw.csv")
-        return count,adata.obs['Group'],adata.obs['size_factors']
+        # if raw == False:
+        #     a = pd.DataFrame(count).T
+        #     a.to_csv("./results/raw.csv")
+        return count,adata.obs['Group']
 def nomalize_for_COVID(file_name,label_path,gene_num):
     data = pd.read_csv(file_name, header=None, sep=",")
     label = pd.read_csv(label_path, header=0, sep=";")
@@ -203,12 +203,19 @@ def nomalize_for_Zeisel(file_name,label_path,gene_num,rate):
     adata.obs['Group'] = data_label
     adata.obs['cell_name'] = cell_name
     adata.var['Gene'] = gene_name
-    adata = normalize(adata, copy=True, highly_genes=gene_num, size_factors=True, normalize_input=True,
+    adata = normalize(adata, copy=True, highly_genes=gene_num, size_factors=True, normalize_input=False,
                       logtrans_input=True)
+    #create dataset
     count = adata.X
-    X_zero, i, j, ix = impute_dropout(count, 1, rate)
-    # a = pd.DataFrame(X_zero).T
-    # a.to_csv("./results/raw-"+str(rate)+".csv")
+    X_zero, i, j, ix = impute_dropout(count, 1, 0.1)
+    a = pd.DataFrame(X_zero).T
+    a.to_csv("./results/raw-"+str(0.1)+".csv")
+    X_zero, i, j, ix = impute_dropout(count, 1, 0.3)
+    a = pd.DataFrame(X_zero).T
+    a.to_csv("./results/raw-" + str(0.3) + ".csv")
+    X_zero, i, j, ix = impute_dropout(count, 1, 0.5)
+    a = pd.DataFrame(X_zero).T
+    a.to_csv("./results/raw-" + str(0.5) + ".csv")
     return X_zero, cell_label,adata.obs['size_factors'],adata.var['Gene']
 
 def create_adata_AD(file_name,file_label,original_file,funtion_name,file_res,gene_list):
@@ -344,7 +351,7 @@ def create_adata(filename,file_original,function_name,file_res):
         cell_name = np.array(f["obs"]["cell_type1"])
         cell_type, cell_label = np.unique(cell_name, return_inverse=True)
         print(np.array(f["obs"]))
-        batch_name = np.array(f["obs"]["age"])
+        batch_name = np.array(f["obs"]["organism"])
         batch_type, batch_label = np.unique(batch_name, return_inverse=True)
         class_num = np.array(cell_label).max() + 1
     print(class_num)
@@ -1213,16 +1220,28 @@ if __name__=="__main__":
     # print(test_data.shape)
     # a = pd.read_csv("./compare_funtion/AFGRL/AFGRL-master/test_csv/Alzheimer/GSE138852_counts.csv")
     # print(a.shape)
-    data_set = "Klein"
-    function_list = ["raw","scAFGRL"]
+    data_set = "Quake_10x_Spleen"
+    function_list = ["raw","AutoClass","GraphSCI","MAGIC","scTAG","scGCL"]
     res_list = []
     gene_list = "./compare_funtion/AFGRL/AFGRL-master/results/"+data_set+"/"+data_set+"-gene_list.csv"
 
     for i in range(len(function_list)):
         result_file = "./compare_funtion/AFGRL/AFGRL-master/results/"+data_set+"/"+data_set+"-res.txt"
-        adata,cell_type= create_adata_Klein("./compare_funtion/AFGRL/AFGRL-master/results/"+data_set + "/"+function_list[i]+"-"+data_set+"-imputed.csv","./compare_funtion/AFGRL/AFGRL-master/test_csv/"+data_set+ "/label.csv",function_list[i])
+        adata,cell_type,_= create_adata("./compare_funtion/AFGRL/AFGRL-master/results/"+data_set + "/"+function_list[i]+"-"+data_set+"-imputed.csv","./compare_funtion/AFGRL/AFGRL-master/test_csv/Quake_10x_Spleen/data.h5",function_list[i],result_file)
         rcParams['figure.figsize'] = 12,8
-        # sc.pp.neighbors(adata,n_neighbors=4)
+
+        sc.pp.neighbors(adata)
+        dp_object = sc.tl.umap(adata)
+        axes_dict = dp_object.get_axes()
+        # figure out which axis you want by printing the axes_dict
+        # print(axes_dict)
+        ax = axes_dict[...]
+        ax.xaxis.label.set_fontsize(15)
+        for label in ax.get_xticklabels():
+            label.set_fontsize('large')
+        # 如果设置了 adata 的 .raw 属性时，下图显示了“raw”（标准化、对数化但未校正）基因表达矩阵。
+        sc.pl.umap(adata,ncols = 2, color=[function_list[i]],save = "./"+data_set+"/"+function_list[i]+".png")
+
         # sc.tl.louvain(adata)
         # sc.tl.paga(adata,groups=function_list[i])
         # sc.pl.paga(adata,threshold=0.03,save = "/Klein/"+function_list[i]+"_paga.png")

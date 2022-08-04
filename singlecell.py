@@ -16,7 +16,7 @@ class Singlecell(InMemoryDataset):
         self.name = name.lower()
         self.filepath = filepath
         # self.labelpath = "./test_csv/AD_interpretable/GSE138852_covariates.csv"
-        self.labelpath = "./test_csv/Klein/label.csv"
+        self.labelpath = "./test_csv/Zeisel/label.csv"
         super(Singlecell, self).__init__(root, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
