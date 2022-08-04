@@ -40,7 +40,7 @@ class Singlecell(InMemoryDataset):
         pass
 
     def process(self):
-        raw = True
+        raw = False
         # data, data_label,size_factor = data_Preprocess.nomalize_for_COVID(self.filepath,self.labelpath,2048);
         #data, data_label, size_factor,gene = data_Preprocess.nomalize_for_Zeisel(self.filepath, self.labelpath, 2048,0);
         data, data_label = data_Preprocess.nomalize_for_AF(self.filepath, 2048,raw);
