@@ -41,15 +41,14 @@ class AFGRL_ModelTrainer(embedder):
         self._task = args.task
         print("Downstream Task : {}".format(self._task))
         os.environ["CUDA_VISIBLE_DEVICES"] = str(args.device)
-        # self._device = f'cuda:{args.device}' if torch.cuda.is_available() else "cpu"
+        #self._device = f'cuda:{args.device}' if torch.cuda.is_available() else "cpu"
         self._device = "cpu"
-        # torch.cuda.set_device(self._device)
+        #torch.cuda.set_device(self._device)
         self._dataset = Dataset(root=args.root, dataset=args.dataset)
-        self._size_factor = self._dataset.size_factors
         self._loader = DataLoader(dataset=self._dataset)
         #设置输入维度为[500,1024]
         layers = [self._dataset.data.x.shape[1]] + self.hidden_layers
-        self._model = AFGRL(layers,self._size_factor, args).to(self._device)
+        self._model = AFGRL(layers, args).to(self._device)
         self._optimizer = optim.AdamW(params=self._model.parameters(), lr=args.lr, weight_decay= 1e-5)
 
     def train(self):
@@ -101,12 +100,11 @@ class AFGRL_ModelTrainer(embedder):
 
 
 class AFGRL(nn.Module):
-    def __init__(self, layer_config,size_factor, args, **kwargs):
+    def __init__(self, layer_config, args, **kwargs):
         super().__init__()
         dec_dim = [512, 256]
         #student_encoder将输入的数据进行GCN操作
         self.student_encoder = Encoder(layer_config=layer_config, dropout=args.dropout, **kwargs)
-        self.size_factors = size_factor
         #teacher_encoder对student_encoder进行深拷贝
         self.teacher_encoder = copy.deepcopy(self.student_encoder)
         #不对teacher_encoder的权重进行更新
@@ -188,7 +186,7 @@ class AFGRL(nn.Module):
         recon_loss = torch.nn.MSELoss(reduction='mean')
         recon_loss_ = recon_loss(x,student)
         # adj_recon_ = recon_loss(adj.to_dense(),adj_recon)
-        loss_reforce = (loss1 + loss2)*1.5
+        loss_reforce = (loss1 + loss2)
         loss = zinb_loss + loss_reforce + recon_loss_
         #ind,k返回值暂时去除
         return student, loss.mean()
