@@ -13,11 +13,13 @@ torch.cuda.manual_seed_all(0)
 # torch.backends.cudnn.deterministic = True
 # torch.backends.cudnn.benchmark = False
 import random
+import math
 random.seed(0)
 import data_Preprocess
 import os
 import pandas as pd
 from sklearn.cluster import KMeans
+from sklearn import metrics
 from sklearn.metrics import normalized_mutual_info_score, pairwise
 
 class embedder:
@@ -30,6 +32,7 @@ class embedder:
         self._model.train(False)
         self._embeddings = self._labels = None
         self._train_mask = self._dev_mask = self._test_mask = None
+
         for bc, batch_data in enumerate(self._loader):
             # augmentation = utils.Augmentation(float(self._args.aug_params[0]), float(self._args.aug_params[1]),
             #                                   float(self._args.aug_params[2]), float(self._args.aug_params[3]))
@@ -37,7 +40,7 @@ class embedder:
             batch_data.to(self._device)
             # view1, view2 = augmentation._feature_masking(batch_data, self._device)
 
-            emb, _ = self._model(x = batch_data.x, y=batch_data.y, edge_index=batch_data.edge_index,
+            emb, loss = self._model(x = batch_data.x, y=batch_data.y, edge_index=batch_data.edge_index,
                                                                            neighbor=[batch_data.neighbor_index, batch_data.neighbor_attr],
                                                                            edge_weight=batch_data.edge_attr, epoch=epoch)
             # emb, loss = self._model(x=view1.x, x2=view2.x, y=batch_data.y, edge_index=view1.edge_index,
@@ -52,11 +55,12 @@ class embedder:
                 self._embeddings = torch.cat([self._embeddings, emb])
                 self._labels = torch.cat([self._labels, y])
 
-    def evaluate(self, task, epoch):
+
+    def evaluate(self, task, epoch, sillog):
         if task == "node":
             self.evaluate_node(epoch)
         elif task == "clustering":
-            self.evaluate_clustering(epoch)
+            self.evaluate_clustering(epoch,sillog)
         elif task == "similarity":
             self.run_similarity_search(epoch)
         
@@ -122,10 +126,10 @@ class embedder:
         print(self.st_best)
 
 
-    def evaluate_clustering(self, epoch):
+    def evaluate_clustering(self, epoch,sillog):
         
         embeddings = F.normalize(self._embeddings, dim = -1, p = 2).detach().cpu().numpy()
-        print(embeddings.shape)
+
         nb_class = len(self._dataset[0].y.unique())
         true_y = self._dataset[0].y.detach().cpu().numpy()
 
@@ -136,38 +140,65 @@ class embedder:
         for i in range(10):
             estimator.fit(embeddings)
             y_pred = estimator.predict(embeddings)
-
             s1 = normalized_mutual_info_score(true_y, y_pred, average_method='arithmetic')
             NMI_list.append(s1)
-
+        estimator.fit(embeddings)
+        y_pred = estimator.predict(embeddings)
+        silhid = metrics.silhouette_score(self._embeddings.detach().cpu().numpy(), y_pred, metric='euclidean')
         s1 = sum(NMI_list) / len(NMI_list)
+        sillog.append(silhid)
+        arr_sil = np.array(sillog)
         ##recover ability
         # data_original = pd.read_csv("./results/Klein/raw-Klein-imputed.csv", header=None, sep=",")
         # X_original = np.array(data_original)[1:, 1:].T
         # count_for_original = torch.tensor(X_original)
         # count_for_original_ = F.normalize(count_for_original, dim=-1, p=2).detach().cpu().numpy()
-        # X_zero, i, j, ix = data_Preprocess.impute_dropout(X_original, 1, 0.1)
+        # X_zero, i, j, ix = data_Preprocess.impute_dropout(X_original, 1, 0.5)
         # mean, median, min, max = data_Preprocess.imputation_error(embeddings, count_for_original_, X_zero, i, j, ix)
         # cosine_sim = data_Preprocess.imputation_cosine(self._embeddings.detach().cpu().numpy(), X_original, X_zero, i, j, ix)
-        print('** [{}] [Current Epoch {}] recover gene expression: {:.4f} **'.format(self.args.embedder, epoch, s1))
-
-        if s1 > self.best_dev_acc:
-            self.best_epoch = epoch
-            self.best_dev_acc = s1
+        #print('** [{}] [Current Epoch {}] recover gene expression: {:.4f} **'.format(self.args.embedder, epoch, cosine_sim))
+        print('** [{}] [Current Epoch {}] this epoch NMI values: {:.4f} **'.format(self.args.embedder, epoch, s1))
+        # if s1 > self.best_dev_acc:
+        #     self.best_epoch = epoch
+        #     self.best_dev_acc = s1
+        #     print("~~~~~~~~~~~~~~~~~~")
+        #     print(self.best_dev_acc)
+        #     if self._args.checkpoint_dir is not '':
+        #         print('Saving checkpoint...')
+        #         torch.save(embeddings, os.path.join(self._args.checkpoint_dir, 'embeddings_{}_{}.pt'.format(self._args.dataset, self._args.task)))
+        #         # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
+        #         a = pd.DataFrame(self._embeddings.detach().cpu().numpy()).T
+        #         a.to_csv("./results/student.csv")
+        #     print("save")
+        #     print("~~~~~~~~~~~~~~~~~~")
+        if math.floor(silhid*100) > math.floor(self.best_dev_acc*100):
+            print(round(silhid, 2))
+            self.best_dev_acc = round(silhid, 2)
+            self.best_embeddings = embeddings
+            self.best_test_acc = s1
             print("~~~~~~~~~~~~~~~~~~")
-            print(self.best_dev_acc)
+            print(silhid)
             if self._args.checkpoint_dir is not '':
                 print('Saving checkpoint...')
-                torch.save(embeddings, os.path.join(self._args.checkpoint_dir, 'embeddings_{}_{}.pt'.format(self._args.dataset, self._args.task)))
+                torch.save(embeddings, os.path.join(self._args.checkpoint_dir,
+                                                    'embeddings_{}_{}.pt'.format(self._args.dataset, self._args.task)))
                 # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
-                a = pd.DataFrame(self._embeddings.detach().cpu().numpy()).T
+                a = pd.DataFrame(self.best_embeddings).T
                 a.to_csv("./results/student.csv")
             print("save")
             print("~~~~~~~~~~~~~~~~~~")
-
-        self.best_dev_accs.append(self.best_dev_acc)
-        self.st_best = '** [Best epoch: {}] Best NMI: {:.4f} **\n'.format(self.best_epoch, self.best_dev_acc)
-        print(self.st_best)
+        # if abs(self.current_loss - self.last_loss) < 1e3:
+        #     if self._args.checkpoint_dir is not '':
+        #         print('Saving checkpoint...')
+        #         torch.save(embeddings, os.path.join(self._args.checkpoint_dir, 'embeddings_{}_{}.pt'.format(self._args.dataset, self._args.task)))
+        #         # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
+        #         a = pd.DataFrame(self._embeddings.detach().cpu().numpy()).T
+        #         a.to_csv("./results/student.csv")
+        #         self.st_best = '** Finally NMI: {:.4f} **\n'.format(s1)
+        #         print(self.st_best)
+        #         return True
+        #
+        # self.last_loss = self.current_loss
 
 
 
