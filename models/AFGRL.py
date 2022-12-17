@@ -94,10 +94,11 @@ class AFGRL_ModelTrainer(embedder):
                 self.infer_embeddings(epoch)
                 # self.evaluate(self._task, epoch)
                 self.evaluate(self._task, epoch, sillog)
-                
+
 
 
         print("\nTraining Done!")
+        self.st_best = '** [last epoch: {}] last NMI: {:.4f} **\n'.format(self._args.epochs, self.best_test_acc)
         print("[Final] {}".format(self.st_best))
         print('Saving checkpoint...')
         torch.save(self.best_embeddings, os.path.join(self._args.checkpoint_dir,
@@ -106,7 +107,6 @@ class AFGRL_ModelTrainer(embedder):
         # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
         a = pd.DataFrame(self.best_embeddings).T
         a.to_csv("./results/student.csv")
-        self.st_best = '** [last epoch: {}] last NMI: {:.4f} **\n'.format(self._args.epochs, self.best_test_acc)
         f_final.write("{} -> {}\n".format(self.config_str, self.st_best))
 
 
