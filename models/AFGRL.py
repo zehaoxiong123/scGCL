@@ -17,7 +17,7 @@ torch.backends.cudnn.benchmark = False
 import os
 from utils import EMA, set_requires_grad, init_weights, update_moving_average, loss_fn, repeat_1d_tensor, currentTime
 import copy
-
+import pandas as pd
 from data import Dataset
 from embedder import embedder
 from utils import config2string
@@ -41,9 +41,9 @@ class AFGRL_ModelTrainer(embedder):
         self._task = args.task
         print("Downstream Task : {}".format(self._task))
         os.environ["CUDA_VISIBLE_DEVICES"] = str(args.device)
-        #self._device = f'cuda:{args.device}' if torch.cuda.is_available() else "cpu"
+        # self._device = f'cuda:{args.device}' if torch.cuda.is_available() else "cpu"
         self._device = "cpu"
-        #torch.cuda.set_device(self._device)
+        # torch.cuda.set_device(self._device)
         self._dataset = Dataset(root=args.root, dataset=args.dataset)
         self._loader = DataLoader(dataset=self._dataset)
         #设置输入维度为[500,1024]
@@ -55,11 +55,12 @@ class AFGRL_ModelTrainer(embedder):
 
         self.best_test_acc, self.best_dev_acc, self.best_test_std, self.best_dev_std, self.best_epoch = 0, 0, 0, 0, 0 
         self.best_dev_accs = []
-        
+        self.best_embeddings = None
+        sillog = []
         # get Random Initial accuracy
         self.infer_embeddings(0)
         print("initial accuracy ")
-        self.evaluate(self._task, 0)
+        self.evaluate(self._task, 0, sillog)
 
         f_final = open("results/{}.txt".format(self._args.embedder), "a")
 
@@ -91,11 +92,23 @@ class AFGRL_ModelTrainer(embedder):
 
             if (epoch) % 5 == 0:
                 self.infer_embeddings(epoch)
-                self.evaluate(self._task, epoch)
+                # self.evaluate(self._task, epoch)
+                tag = self.evaluate(self._task, epoch, sillog)
+                print(tag)
+                if tag:
+                    break
+
 
         print("\nTraining Done!")
         print("[Final] {}".format(self.st_best))
-
+        print('Saving checkpoint...')
+        torch.save(self.best_embeddings, os.path.join(self._args.checkpoint_dir,
+                                            'embeddings_{}_{}.pt'.format(self._args.dataset,
+                                                                         self._args.task)))
+        # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
+        a = pd.DataFrame(self.best_embeddings).T
+        a.to_csv("./results/student.csv")
+        self.st_best = '** [last epoch: {}] last NMI: {:.4f} **\n'.format(self._args.epochs, self.best_test_acc)
         f_final.write("{} -> {}\n".format(self.config_str, self.st_best))
 
 
@@ -126,6 +139,7 @@ class AFGRL(nn.Module):
         self.student_predictor.apply(init_weights)
         self.relu = nn.ReLU()
         self.topk = args.topk
+        # self._device = args.device
         self._device = "cpu"
     def clip_by_tensor(self,t, t_min, t_max):
         """
@@ -165,7 +179,7 @@ class AFGRL(nn.Module):
         disp = self.clip_by_tensor(disp,1e-4,1e4)
         mean = self.mean_Encoder(z)
         mean = self.clip_by_tensor(torch.exp(mean),1e-5,1e6)
-
+        modify = 0
         with torch.no_grad():
             #teacher和student使用一个权重
             teacher = self.teacher_encoder(x=x, edge_index=edge_index, edge_weight=edge_weight)
@@ -187,7 +201,12 @@ class AFGRL(nn.Module):
         recon_loss_ = recon_loss(x,student)
         # adj_recon_ = recon_loss(adj.to_dense(),adj_recon)
         loss_reforce = (loss1 + loss2)
-        loss = zinb_loss + loss_reforce + recon_loss_
+        if modify == 0:
+            loss = zinb_loss + loss_reforce + recon_loss_
+        elif modify == 1:
+            loss = loss_reforce + recon_loss_
+        elif modify == 2:
+            loss = zinb_loss
         #ind,k返回值暂时去除
         return student, loss.mean()
 
@@ -196,6 +215,7 @@ class AFGRL(nn.Module):
 class Neighbor(nn.Module):
     def __init__(self, args):
         super(Neighbor, self).__init__()
+        # self.device = args.device
         self.device = "cpu"
         self.num_centroids = args.num_centroids
         self.num_kmeans = args.num_kmeans
