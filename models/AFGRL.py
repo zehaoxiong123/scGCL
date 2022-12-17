@@ -93,10 +93,8 @@ class AFGRL_ModelTrainer(embedder):
             if (epoch) % 5 == 0:
                 self.infer_embeddings(epoch)
                 # self.evaluate(self._task, epoch)
-                tag = self.evaluate(self._task, epoch, sillog)
-                print(tag)
-                if tag:
-                    break
+                self.evaluate(self._task, epoch, sillog)
+                
 
 
         print("\nTraining Done!")
