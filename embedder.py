@@ -157,7 +157,7 @@ class embedder:
         # mean, median, min, max = data_Preprocess.imputation_error(embeddings, count_for_original_, X_zero, i, j, ix)
         # cosine_sim = data_Preprocess.imputation_cosine(self._embeddings.detach().cpu().numpy(), X_original, X_zero, i, j, ix)
         #print('** [{}] [Current Epoch {}] recover gene expression: {:.4f} **'.format(self.args.embedder, epoch, cosine_sim))
-        print('** [{}] [Current Epoch {}] this epoch NMI values: {:.4f} **'.format(self.args.embedder, epoch, s1))
+        print('** [{}] [Current Epoch {}] this epoch NMI values: {:.4f} ** and this epoch sil values: {}'.format(self.args.embedder, epoch, s1,silhid))
         # if s1 > self.best_dev_acc:
         #     self.best_epoch = epoch
         #     self.best_dev_acc = s1
@@ -171,8 +171,8 @@ class embedder:
         #         a.to_csv("./results/student.csv")
         #     print("save")
         #     print("~~~~~~~~~~~~~~~~~~")
-        if math.floor(silhid*100) > math.floor(self.best_dev_acc*100):
-            print(round(silhid, 2))
+        if math.floor(silhid*100) >= math.floor(self.best_dev_acc*100):
+
             self.best_dev_acc = round(silhid, 2)
             self.best_embeddings = embeddings
             self.best_test_acc = s1
