@@ -57,6 +57,7 @@ class Singlecell(InMemoryDataset):
         data = Data(x=x, edge_index=edge_index, y=y)
         data = data if self.pre_transform is None else self.pre_transform(data)
         data, slices = self.collate([data])
+        print(self.processed_paths[0])
         torch.save((data, slices), self.processed_paths[0])
 
     def __repr__(self):

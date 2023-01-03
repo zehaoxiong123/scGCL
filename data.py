@@ -60,6 +60,7 @@ class Dataset(InMemoryDataset):
         self.root, self.dataset, self.data_dir = download_data(root=root, dataset=dataset)
         utils.create_dirs(self.dirs)
         super().__init__(root=self.data_dir, transform=transform, pre_transform=pre_transform)
+        self.process()
         path = osp.join(self.data_dir, "processed", self.processed_file_names[0])
         self.data, self.slices = torch.load(path)
 
@@ -96,6 +97,7 @@ class Dataset(InMemoryDataset):
             data, slices = self.collate(data_list)
             torch.save((data, slices), processed_path)
 
+
     @property
     def raw_file_names(self):
         return ["data.pt"]
@@ -118,7 +120,7 @@ class Dataset(InMemoryDataset):
 
     @property
     def result_dir(self):
-        return osp.join(self.data_dir, "result")
+        return osp.join(self.data_dir, "results")
 
     @property
     def dirs(self):

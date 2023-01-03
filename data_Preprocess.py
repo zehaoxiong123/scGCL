@@ -1287,7 +1287,7 @@ if __name__=="__main__":
     #data_array, data_label, gene_name, cell_name, figure_size_real, weight, scaler, semi_label_real, test_data =read_klein_for_train("./compare_funtion/sagan/test_csv/Klein/data.csv","./compare_funtion/sagan/test_csv/Klein/label.csv",4,1,4900)
     # data_org = data_array.reshape(data_array.shape[0], 4900)
     # a = pd.DataFrame(data_org).T
-    # a.to_csv("./compare_funtion/sagan/result/Klein_raw.csv")
+    # a.to_csv("./compare_funtion/sagan/results/Klein_raw.csv")
     #print(data_array.shape)
     #data_array, data_label, gene_name, cell_name, data_for_count, figure_size_real = read_interpretable_for_train(
        # "./compare_funtion/sagan/test_csv/HP_interpretable/HP.csv",

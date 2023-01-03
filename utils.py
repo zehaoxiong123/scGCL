@@ -39,7 +39,7 @@ def to_sparse(x):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--embedder", type=str, default="AFGRL")
-    parser.add_argument("--dataset", type=str, default="adam", help="Name of the dataset. Supported names are: wikics, cs, computers, photo, and physics")
+    parser.add_argument("--dataset", type=str, default="tosches_turtle", help="Name of the dataset. Supported names are: wikics, cs, computers, photo, and physics")
 
     parser.add_argument('--checkpoint_dir', type=str, default = './model_checkpoints', help='directory to save checkpoint')
     parser.add_argument("--root", type=str, default="data")
@@ -287,7 +287,7 @@ def create_masks(data):
             dev_mask = dev_mask.reshape(1, -1)
             train_mask = train_mask.reshape(1, -1)
 
-            if data.train_mask is None:
+            if 'train_mask' not in data:
                 data.train_mask = train_mask
                 data.val_mask = dev_mask
                 data.test_mask = test_mask
