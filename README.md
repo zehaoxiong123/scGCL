@@ -22,7 +22,7 @@ $ python main.py --dataset adam --epochs 300
 ## Arguments
 |    Parameter    | Introduction                                                 |
 | :-------------: | ------------------------------------------------------------ |
-|    dataset     | A h5 file. Contains a matrix of scRNA-seq expression values,true labels, and other information. By default, genes are assumed to be represent-ed by columns and samples are assumed to be represented by rows. |
+|    dataset     | A h5 file. Contains a matrix of scRNA-seq expression values,true labels, and other information. |
 |  task  | Downstream task. Supported tasks are: node, clustering, similarity                                     |
 | es | Early Stopping Criterion                                   |
 |     epochs     | Number of training epochs                                    |
