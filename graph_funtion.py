@@ -11,7 +11,7 @@ def get_adj(count, k=15, pca=50, mode="connectivity"):
         countp = dopca(count, dim=pca)
     else:
         countp = count
-    A = kneighbors_graph(countp, k, mode=mode, metric="euclidean", include_self=True)
+    A = kneighbors_graph(countp, k, mode=mode, metric="cosine", include_self=True)
     adj = A.toarray()
     adj_n = norm_adj(adj)
     return adj, adj_n
