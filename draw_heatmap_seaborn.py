@@ -3,7 +3,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 sns.set()
-plt.rcParams['font.sans-serif']='SimHei'#设置中文显示，必须放在sns.set之后
+plt.rcParams['font.sans-serif']='SimHei'
 np.random.seed(0)
 max_lst_of_all = {}
 max_lst_of_all["Zeisel"] = [0.4309,0.9078,0.6999,0.8581]
@@ -46,22 +46,15 @@ for i in range(len(labels)):
     for key in max_lst_of_all.keys():
         function_list.append(max_lst_of_all[key][i])
     datas.append(function_list)
- #设置二维矩阵
 f, ax = plt.subplots(figsize=(4, 6))
 
-#heatmap后第一个参数是显示值,vmin和vmax可设置右侧刻度条的范围,
-#参数annot=True表示在对应模块中注释值
-# 参数linewidths是控制网格间间隔
-#参数cbar是否显示右侧颜色条，默认显示，设置为None时不显示
-#参数cmap可调控热图颜色，具体颜色种类参考：https://blog.csdn.net/ztf312/article/details/102474190
 df = pd.DataFrame(datas,columns=indicater,index=labels)
 sns.heatmap(df, ax=ax,vmin=0,vmax=1,cmap='YlGn',annot=True,linewidths=2,cbar=True)
 
-ax.set_title('Median L1 distance') #plt.title('热图'),均可设置图片标题
-ax.set_ylabel('compare_function')  #设置纵轴标签
-ax.set_xlabel('data_set')  #设置横轴标签
+ax.set_title('Median L1 distance')
+ax.set_ylabel('compare_function')
+ax.set_xlabel('data_set')
 
-#设置坐标字体方向，通过rotation参数可以调节旋转角度
 label_y = ax.get_yticklabels()
 plt.setp(label_y, rotation=360, horizontalalignment='right')
 label_x = ax.get_xticklabels()

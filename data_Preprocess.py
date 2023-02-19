@@ -18,7 +18,6 @@ import torch
 import torch.nn.functional as F
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
-#read_cell_to_image用于图片读取成可以放入模型的张量_用于模拟单细胞数据集
 def read_cell_to_image(data_path,label_path,class_num):
     data = pd.read_csv(data_path, header=None, sep=",")
     label = pd.read_csv(label_path, header=0, sep=",")
@@ -31,13 +30,11 @@ def read_cell_to_image(data_path,label_path,class_num):
     cell_num = np.shape(cell_name)[0]
     for i in range(cell_num):
         gene_list_for_count = np.array(arr1[1:, i + 1].astype('double'))
-        #数据归一化操作
         gene_list_all = np.sum(gene_list_for_count)
         gene_list_median = np.median(gene_list_for_count)
         gene_list_for_count = gene_list_for_count*(gene_list_median/gene_list_all)
         data_for_count.append(gene_list_all/gene_list_median)
         gene_list_for_count = np.log2(gene_list_for_count+1)
-        #把单细胞表达数据转化为图片
         gene_list = gene_list_for_count.tolist()
         gene_len =  len(gene_list)
         figure_size = int(gene_len**0.5)
@@ -57,7 +54,6 @@ def read_cell_to_image(data_path,label_path,class_num):
     data_label = np.array(data_label)
     return data_array,data_label,gene_name,cell_name,data_for_count
 
-#read_cell用于单细胞数据未补全时的预处理_用于模拟单细胞数据集
 def read_cell(data_path,label_path,class_num):
     data = pd.read_csv(data_path, header=None, sep=",")
     label = pd.read_csv(label_path, header=0, sep=",")
@@ -69,12 +65,10 @@ def read_cell(data_path,label_path,class_num):
     cell_num = np.shape(cell_name)[0]
     for i in range(cell_num):
         gene_list_for_count = np.array(arr1[1:, i + 1].astype('float64'))
-        #数据归一化操作
         gene_list_all = np.sum(gene_list_for_count)
         gene_list_median = np.median(gene_list_for_count)
         gene_list_for_count = gene_list_for_count * (gene_list_median / gene_list_all)
         gene_list_for_count = np.log2(gene_list_for_count + 1)
-        # 把单细胞表达数据转化为图片
         gene_list = gene_list_for_count.tolist()
         gene_len = len(gene_list)
         data_array.append(np.array(gene_list))
@@ -520,10 +514,8 @@ def read_cell_for_h5_to_csv(filename,rate,gene_num, output_file,sparsify = False
         semi_label_index = []
         np.random.seed(1)
         semi_label = np.random.permutation(cell_name.shape[0])
-        # rate表示取多少标签进行训练
         semi_label_index = int((1 - rate) * cell_name.shape[0])
         semi_label_train = semi_label[:semi_label_index]
-        #为了测试准确率用
         semi_label_real = cell_label[semi_label_train]
         weight_label_train = semi_label[semi_label_index+1:]
         cell_label[semi_label_train] = class_num
@@ -679,7 +671,6 @@ def read_cell_for_h5_pre_clustering(filename,rate,gene_num,cluster_num, sparsify
         data = scaler.fit_transform(data)
         for i in range(data.shape[0]):
             gene_list_for_count = np.array(data[i, 0:].astype('double'))
-            # 把单细胞表达数据转化为图片
             gene_list_max = np.max(gene_list_for_count)
             data_count_array.append(gene_list_max)
 
@@ -704,7 +695,6 @@ def read_cell_for_h5_pre_clustering(filename,rate,gene_num,cluster_num, sparsify
         semi_label_index = []
         np.random.seed(6)
         semi_label = np.random.permutation(label_1.shape[0])
-        # rate表示取多少标签进行训练
         semi_label_index = int((1 - rate) * label_1.shape[0])
         semi_label_train = semi_label[:semi_label_index]
         # 为了测试准确率用
@@ -715,7 +705,6 @@ def read_cell_for_h5_pre_clustering(filename,rate,gene_num,cluster_num, sparsify
         weight = compute_class_weight(class_weight, np.array(range(class_num)), label_1[weight_label_train])
         # semi_label_index = int((1 - rate) * cell_name.shape[0])
         # semi_label_train = semi_label[:semi_label_index]
-        # # 为了测试准确率用
         # semi_label_real = cell_label[semi_label_train]
         # weight_label_train = semi_label[semi_label_index + 1:]
         # cell_label[semi_label_train] = class_num
@@ -759,12 +748,10 @@ def read_cell_for_h5_imputed(array_file,filename, sparsify = False, skip_exprs =
 
         for i in range(cell_num):
             gene_list_for_count = np.array(arr1[1:, i + 1].astype('float64'))
-            # 数据归一化操作
             # gene_list_all = np.sum(gene_list_for_count)
             # gene_list_median = np.median(gene_list_for_count)
             # gene_list_for_count = gene_list_for_count * (gene_list_median / gene_list_all)
             # gene_list_for_count = np.log2(gene_list_for_count + 1)
-            # 把单细胞表达数据转化为图片
             gene_list = gene_list_for_count.tolist()
             gene_len = len(gene_list)
             data_array.append(np.array(gene_list))
@@ -907,10 +894,8 @@ def read_interpretable_for_train(data_path,label_path,class_num,data_set,rate,ge
     data_for_count = []
     np.random.seed(2)
     semi_label = np.random.permutation(cell_name.shape[0])
-    # rate表示取多少标签进行训练
     semi_label_index = int((1 - rate) * cell_name.shape[0])
     semi_label_train = semi_label[:semi_label_index]
-    # 为了测试准确率用
     semi_label_real = data_label_index[semi_label_train]
     weight_label_train = semi_label[semi_label_index + 1:]
     if  data_set == "lung_cancer":
@@ -926,7 +911,6 @@ def read_interpretable_for_train(data_path,label_path,class_num,data_set,rate,ge
     cell_num = np.shape(cell_name)[0]
     for i in range(cell_num):
         gene_list_for_count = np.array(data[i, 0:].astype('double'))
-        # 把单细胞表达数据转化为图片
         gene_list = gene_list_for_count.tolist()
         gene_len = len(gene_list)
         figure_size = int(gene_len ** 0.5)
@@ -1015,10 +999,8 @@ def read_klein_for_train(data_path,label_path,class_num,rate,gene_num,sparsify =
     data_for_count = []
     np.random.seed(1)
     semi_label = np.random.permutation(cell_name.shape[0])
-    # rate表示取多少标签进行训练
     semi_label_index = int((1 - rate) * cell_name.shape[0])
     semi_label_train = semi_label[:semi_label_index]
-    # 为了测试准确率用
     semi_label_real = data_label_index[semi_label_train]
     weight_label_train = semi_label[semi_label_index + 1:]
     data_label[semi_label_train]=np.array([0,0,0,0,1])
@@ -1027,7 +1009,6 @@ def read_klein_for_train(data_path,label_path,class_num,rate,gene_num,sparsify =
     cell_num = np.shape(cell_name)[0]
     for i in range(cell_num):
         gene_list_for_count = np.array(data[i, 0:].astype('double'))
-        # 把单细胞表达数据转化为图片
         gene_list = gene_list_for_count.tolist()
         gene_len = len(gene_list)
         figure_size = int(gene_len ** 0.5)
@@ -1196,11 +1177,9 @@ def imputation_impute_matrix(imputed_file,original_file,rate):
 #     cell_num = np.shape(cell_name)[0]
 #     for i in range(cell_num):
 #         gene_list_for_count = np.array(arr1[7:, i + 1].astype('double'))
-#         # 数据归一化操作
 #         gene_list_max = np.max(gene_list_for_count)
 #         data_for_count.append(gene_list_max)
 #         gene_list_for_count = gene_list_for_count / gene_list_max
-#         # 把单细胞表达数据转化为图片
 #         gene_list = gene_list_for_count.tolist()
 #         gene_len = len(gene_list)
 #         data_array.append(np.array(gene_list))

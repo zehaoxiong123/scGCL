@@ -16,6 +16,10 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import normalized_mutual_info_score, pairwise
 from sklearn import metrics
 
+# scGCL Model
+# Revised freom Original version in AFGRL
+# Ref:
+# https://github.com/Namkyeong/AFGRL/tree/master/evaluate.py
 
 def evaluate_node(embeddings, dataset, name):
 

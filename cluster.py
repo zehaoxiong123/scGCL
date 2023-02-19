@@ -5,23 +5,23 @@ from sklearn.mixture import GaussianMixture
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import metrics
-from itertools import cycle  ##python自带的迭代器模块
+from itertools import cycle
 def test():
-    data = np.random.rand(100, 3) #生成一个随机数据，样本大小为100, 特征数为3
+    data = np.random.rand(100, 3)
 
     #假如我要构造一个聚类数为3的聚类器
-    estimator = KMeans(n_clusters=3)#构造聚类器
+    estimator = KMeans(n_clusters=3)
     estimator.fit(data)#聚类
-    label_pred = estimator.labels_ #获取聚类标签
-    centroids = estimator.cluster_centers_ #获取聚类中心
-    inertia = estimator.inertia_ # 获取聚类准则的总和
+    label_pred = estimator.labels_
+    centroids = estimator.cluster_centers_
+    inertia = estimator.inertia_
 
 def k_means(data,n_class):
-    estimator = KMeans(n_class)  # 构造聚类器
-    estimator.fit(data)  # 聚类
-    label_pred = estimator.labels_  # 获取聚类标签
-    centroids = estimator.cluster_centers_  # 获取聚类中心
-    inertia = estimator.inertia_  # 获取聚类准则的总和
+    estimator = KMeans(n_class)
+    estimator.fit(data)
+    label_pred = estimator.labels_
+    centroids = estimator.cluster_centers_
+    inertia = estimator.inertia_
     print(label_pred)
     return label_pred
 
@@ -29,16 +29,13 @@ def k_means(data,n_class):
 def SC_cluster(data,n_class):
     metrics_metrix = (-1 * metrics.pairwise.pairwisGaussianMixture_clustere_distances(data)).astype(np.int32)
     metrics_metrix += -1 * metrics_metrix.min()
-    ##设置谱聚类函数
     n_clusters_ = n_class
     lables = spectral_clustering(metrics_metrix, n_clusters=n_clusters_)
     print(lables)
     return lables
 
 def GaussianMixture_cluster(data,n_class):
-    ##设置gmm函数
     gmm = GaussianMixture(n_components=n_class, covariance_type='spherical').fit(data)
-    ##训练数据
     y_pred = gmm.predict(data)
     print(y_pred)
     return y_pred

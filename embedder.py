@@ -21,6 +21,10 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn import metrics
 from sklearn.metrics import normalized_mutual_info_score, pairwise
+# scGCL Model
+# Revised freom Original version in AFGRL
+# Ref:
+# https://github.com/Namkyeong/AFGRL/tree/master/embedder.py
 
 class embedder:
     def __init__(self, args):
@@ -168,7 +172,7 @@ class embedder:
         #         torch.save(embeddings, os.path.join(self._args.checkpoint_dir, 'embeddings_{}_{}.pt'.format(self._args.dataset, self._args.task)))
         #         # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
         #         a = pd.DataFrame(self._embeddings.detach().cpu().numpy()).T
-        #         a.to_csv("./results/student.csv")
+        #         a.to_csv("./results/scGCL-Tosches_turtle-euclidean.csv")
         #     print("save")
         #     print("~~~~~~~~~~~~~~~~~~")
         if math.floor(silhid*100) >= math.floor(self.best_dev_acc*100):
@@ -184,7 +188,7 @@ class embedder:
                                                     'embeddings_{}_{}.pt'.format(self._args.dataset, self._args.task)))
                 # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
                 a = pd.DataFrame(self.best_embeddings).T
-                a.to_csv("./results/student.csv")
+                a.to_csv("./results/scGCL-Tosches_turtle-euclidean.csv")
             print("save")
             print("~~~~~~~~~~~~~~~~~~")
         # if abs(self.current_loss - self.last_loss) < 1e3:
@@ -193,7 +197,7 @@ class embedder:
         #         torch.save(embeddings, os.path.join(self._args.checkpoint_dir, 'embeddings_{}_{}.pt'.format(self._args.dataset, self._args.task)))
         #         # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
         #         a = pd.DataFrame(self._embeddings.detach().cpu().numpy()).T
-        #         a.to_csv("./results/student.csv")
+        #         a.to_csv("./results/scGCL-Tosches_turtle-euclidean.csv")
         #         self.st_best = '** Finally NMI: {:.4f} **\n'.format(s1)
         #         print(self.st_best)
         #         return True

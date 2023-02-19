@@ -39,7 +39,7 @@ def to_sparse(x):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--embedder", type=str, default="AFGRL")
-    parser.add_argument("--dataset", type=str, default="tosches_turtle", help="Name of the dataset. Supported names are: wikics, cs, computers, photo, and physics")
+    parser.add_argument("--dataset", type=str, default="adam", help="Name of the dataset. Supported names are: wikics, cs, computers, photo, and physics")
 
     parser.add_argument('--checkpoint_dir', type=str, default = './model_checkpoints', help='directory to save checkpoint')
     parser.add_argument("--root", type=str, default="data")
@@ -218,10 +218,10 @@ def decide_config(root, dataset):
 
         params = {"kwargs": {"root": root, "name": dataset, "filepath": filepath},
                   "name": dataset, "class": Singlecell, "src": "pyg"}
-    elif dataset == "ad":
-        dataset = "AD"
+    elif dataset == "alzheimer":
+        dataset = "Alzheimer"
         root = osp.join(root, "pyg")
-        filepath = "./test_csv/AD_interpretable/GSE138852_counts.csv"
+        filepath = "./test_csv/Alzheimer/GSE138852_counts.csv"
 
         params = {"kwargs": {"root": root, "name": dataset, "filepath": filepath},
                   "name": dataset, "class": Singlecell, "src": "pyg"}

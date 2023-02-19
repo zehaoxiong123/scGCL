@@ -6,12 +6,12 @@ from sklearn.decomposition import PCA
 import scanpy as sc
 from anndata import AnnData
 
-def get_adj(count, k=25, pca=50, mode="connectivity"):
+def get_adj(count, k=15, pca=50, mode="connectivity"):
     if pca:
         countp = dopca(count, dim=pca)
     else:
         countp = count
-    A = kneighbors_graph(countp, k, mode=mode, metric="cosine", include_self=True)
+    A = kneighbors_graph(countp, k, mode=mode, metric="euclidean", include_self=True)
     adj = A.toarray()
     adj_n = norm_adj(adj)
     return adj, adj_n

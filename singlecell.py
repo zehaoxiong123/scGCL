@@ -15,8 +15,8 @@ class Singlecell(InMemoryDataset):
     def __init__(self, root, name, filepath, transform=None, pre_transform=None):
         self.name = name.lower()
         self.filepath = filepath
-        # self.labelpath = "./test_csv/AD_interpretable/GSE138852_covariates.csv"
-        self.labelpath = "./test_csv/Zeisel/label.csv"
+        self.labelpath = "./test_csv/Alzheimer/GSE138852_covariates.csv"
+        # self.labelpath = "./test_csv/Zeisel/label.csv"
         super(Singlecell, self).__init__(root, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
@@ -42,8 +42,9 @@ class Singlecell(InMemoryDataset):
     def process(self):
         raw = False
         # data, data_label,size_factor = data_Preprocess.nomalize_for_COVID(self.filepath,self.labelpath,2048);
-        #data, data_label, size_factor,gene = data_Preprocess.nomalize_for_Zeisel(self.filepath, self.labelpath, 2048,0);
+        # data, data_label, size_factor,gene = data_Preprocess.nomalize_for_AD(self.filepath, self.labelpath, 2048);
         data, data_label = data_Preprocess.nomalize_for_AF(self.filepath, 2048,raw);
+
         x = torch.tensor(np.array(data),dtype=torch.float32)
         y = torch.tensor(data_label, dtype=torch.long)
         #edge_index =  np.corrcoef(data)
