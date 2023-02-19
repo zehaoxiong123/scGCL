@@ -26,6 +26,11 @@ import faiss
 from ZINB_loss import ZINB,NB
 import utils
 
+# scGCL Model
+# Revised freom Original version in AFGRL
+# Ref:
+# https://github.com/Namkyeong/AFGRL/tree/master/models/AFGRL.py
+
 class AFGRL_ModelTrainer(embedder):
     
     def __init__(self, args):
@@ -46,7 +51,6 @@ class AFGRL_ModelTrainer(embedder):
         # torch.cuda.set_device(self._device)
         self._dataset = Dataset(root=args.root, dataset=args.dataset)
         self._loader = DataLoader(dataset=self._dataset)
-        #设置输入维度为[500,1024]
         layers = [self._dataset.data.x.shape[1]] + self.hidden_layers
         self._model = AFGRL(layers, args).to(self._device)
         self._optimizer = optim.AdamW(params=self._model.parameters(), lr=args.lr, weight_decay= 1e-5)
@@ -69,9 +73,6 @@ class AFGRL_ModelTrainer(embedder):
         self._model.train()
         for epoch in range(self._args.epochs):
             for bc, batch_data in enumerate(self._loader):
-                # augmentation = utils.Augmentation(float(self._args.aug_params[0]), float(self._args.aug_params[1]),
-                #                                   float(self._args.aug_params[2]), float(self._args.aug_params[3]))
-
                 batch_data.to(self._device)
                 # view1, view2 = augmentation._feature_masking(batch_data, self._device)
 
@@ -106,7 +107,7 @@ class AFGRL_ModelTrainer(embedder):
                                                                          self._args.task)))
         # zzz = np.concatenate((true_y.reshape(3660, 1), y_pred.reshape(3660, 1)), axis=1)
         a = pd.DataFrame(self.best_embeddings).T
-        a.to_csv("./results/student.csv")
+        a.to_csv("./results/scGCL-Tosches_turtle-euclidean.csv")
         f_final.write("{} -> {}\n".format(self.config_str, self.st_best))
 
 
@@ -114,20 +115,13 @@ class AFGRL(nn.Module):
     def __init__(self, layer_config, args, **kwargs):
         super().__init__()
         dec_dim = [512, 256]
-        #student_encoder将输入的数据进行GCN操作
         self.student_encoder = Encoder(layer_config=layer_config, dropout=args.dropout, **kwargs)
-        #teacher_encoder对student_encoder进行深拷贝
         self.teacher_encoder = copy.deepcopy(self.student_encoder)
-        #不对teacher_encoder的权重进行更新
         set_requires_grad(self.teacher_encoder, False)
-        #mad取值0.9,创建EMA对象
         self.teacher_ema_updater = EMA(args.mad, args.epochs)
-        #根据student_encoder在teacher_encoder中找到最近邻的区域化嵌入
         self.neighbor = Neighbor(args)
-        #rep_dim设置为1024
         rep_dim = layer_config[-1]
         rep_dim_o = layer_config[0]
-        #设置student_predictor[1024,2048,1024]
         self.student_predictor = nn.Sequential(nn.Linear(rep_dim, args.pred_hid), nn.BatchNorm1d(args.pred_hid), nn.ReLU(), nn.Linear(args.pred_hid, rep_dim), nn.ReLU())
         self.ZINB_Encoder = nn.Sequential(nn.Linear(rep_dim, dec_dim[0]), nn.ReLU(),
                                           nn.Linear(dec_dim[0], dec_dim[1]), nn.ReLU())
@@ -164,11 +158,8 @@ class AFGRL(nn.Module):
         update_moving_average(self.teacher_ema_updater, self.teacher_encoder, self.student_encoder)
 
     def forward(self, x, y, edge_index, neighbor, edge_weight=None, epoch=None):
-        #student得到卷积之后的hi
         student = self.student_encoder(x=x, edge_index=edge_index, edge_weight=edge_weight)
         # student_ = self.student_encoder(x=x2, edge_index=edge_index_2, edge_weight=edge_weight_2)
-
-        #pred得到映射器映射出的融合信息z
         pred = self.student_predictor(student)
         # pred_ = self.student_predictor(student_)
         z = self.ZINB_Encoder(student)
@@ -179,7 +170,6 @@ class AFGRL(nn.Module):
         mean = self.clip_by_tensor(torch.exp(mean),1e-5,1e6)
         modify = 0
         with torch.no_grad():
-            #teacher和student使用一个权重
             teacher = self.teacher_encoder(x=x, edge_index=edge_index, edge_weight=edge_weight)
             # teacher_ = self.teacher_encoder(x=x2, edge_index=edge_index_2, edge_weight=edge_weight_2)
         if edge_weight == None:
@@ -205,7 +195,6 @@ class AFGRL(nn.Module):
             loss = loss_reforce + recon_loss_
         elif modify == 2:
             loss = zinb_loss
-        #ind,k返回值暂时去除
         return student, loss.mean()
 
 
